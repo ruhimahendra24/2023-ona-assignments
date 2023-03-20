@@ -1,0 +1,36 @@
+---
+title: "Exercise-1"
+author: "Ruhi Mahendra"
+---
+
+library(here) library(tidyverse) library(network) library(igraph) library(stringr) library(ggraph) \# Import the data Connections \<- read_csv("assignment1/Connections.csv", skip = 2) %\>% drop_na(Company) Connections \<- Connections %\>% unite(name,c('First Name', 'Last Name'), sep = ' ')
+
+# Group by company and count
+
+company_count \<- Connections %\>% group_by(Company) %\>% summarise(count = n()) total \<- Connections %\>% summarise(count = n()) top10= company_count%\>% arrange(desc(count)) %\>% slice(1:10)
+
+# Create nodes
+
+label \<- union(Connections$name, Connections$Company)
+
+id \<- 1:1096
+
+node \<- cbind(as.data.frame(label)%\>%distinct(), id)
+
+# Create Edges
+
+edges \<- Connections[, c("name", "Company")]
+
+edges \<- edges %\>% inner_join(node, by = c("name" = "label")) %\>% rename(from = id)
+
+edges \<- edges %\>% inner_join(node, by = c("Company" = "label")) %\>% rename(to = id)
+
+edges \<- unique(select(edges, from, to))
+
+# Create graph with igraph
+
+library(igraph) routes_igraph \<- graph_from_data_frame(d = edges, vertices = node\$id, directed = TRUE)
+
+# Plot graph
+
+plot(routes_igraph,vertex.size = 3, vertex.label.cex =0.2, edge.arrow.size = 0.01)
